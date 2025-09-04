@@ -28,7 +28,6 @@ jobs:
             # Step to copy the CV files into the build directory
       - name: Copy sitemap.xml, ads.txt, robots.txt to build directory and sitemap.xml
         run: |
-          cp cv/"CV Mourad 2025 FR.pdf" dist/
           cp ads.txt dist/
           cp robots.txt dist/
           cp sitemap.xml dist/
