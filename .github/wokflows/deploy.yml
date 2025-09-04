@@ -1,0 +1,49 @@
+# .github/workflows/deploy.yml
+
+name: Deploy to AWS S3 & CloudFront
+
+on:
+  push:
+    branches:
+      - main # Triggers the workflow on pushes to the 'main' branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build React App
+        run: npm run build
+
+            # Step to copy the CV files into the build directory
+      - name: Copy sitemap.xml, ads.txt, robots.txt to build directory and sitemap.xml
+        run: |
+          cp cv/"CV Mourad 2025 FR.pdf" dist/
+          cp ads.txt dist/
+          cp robots.txt dist/
+          cp sitemap.xml dist/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync ./dist s3://playslix --delete --exclude ".*"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
